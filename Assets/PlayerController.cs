@@ -11,7 +11,8 @@ public class PlayerController : MonoBehaviour
     private float _pressTime = 0f;
     private float _pressTimeTolerance = 2f;
     private bool sprintCooldown = false;
-    private float multiplier = 1f, sprintMove, jump;
+    public float multiplier = 1f;
+    private float sprintMove, jump;
 
     //Jump Mechanics
     public float jumpHeight = 2.0f;
@@ -102,22 +103,6 @@ public class PlayerController : MonoBehaviour
 
             controller.Move(moveDir.normalized * speed * multiplier * Time.deltaTime);
         }
-
-        Transform currTransform = GetComponent<Transform>();
-
-        Vector3 jumping = new Vector3(0f, currTransform.position.y, 0f);
-
-        if (onGround && jumping.y < 0f)
-        {
-            jumping.y = -2f;
-        }
-
-        if (!onGround)
-        {
-            jumping.y += gravity * Time.deltaTime;
-        }
-
-        controller.Move(jumping * Time.deltaTime);
 
         handleAnimation();
     }
