@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    public float currentSpeed;
+
 
     //Sprint Mechanics
     private float _pressTime = 0f;
@@ -23,8 +23,9 @@ public class PlayerController : MonoBehaviour
     bool onGround;
 
     //Character Movement Mechanics
-    public CharacterController controller;
-    public float speed = 8f;
+    //public CharacterController controller;
+    public Rigidbody playerRB;
+    public float currentSpeed = 200f;
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
     public Transform cam;
@@ -75,6 +76,8 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
+
+
     }
 
     // Update is called once per frame
@@ -87,21 +90,42 @@ public class PlayerController : MonoBehaviour
 
         onGround = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
+        if(onGround && jump > 0f)
+        {
+            playerRB.AddForce(new Vector3(playerRB.velocity.x, 1f, playerRB.velocity.z), ForceMode.Impulse);
+        }
+
+
         if (direction.magnitude >= 0.1f)
         {
 
             checkForSprint();
 
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            if(Input.GetKey(KeyCode.W))
+
+            if (Input.GetKey(KeyCode.W))
             {
-                    transform.rotation = Quaternion.Euler(0f, angle, 0f);            
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
             }
+
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
-            controller.Move(moveDir.normalized * speed * multiplier * Time.deltaTime);
+            playerRB.AddForce(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
+
+
+            //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
+        }
+        else
+        {
+            float targetAngle = cam.eulerAngles.y;
+
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
         }
 
         handleAnimation();
@@ -148,6 +172,8 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey("w"))
         {
             animator.SetBool(isWalkingParamHash, true);
+            //playerRB.AddForce(new Vector3(0f, 0f, currentSpeed), ForceMode.VelocityChange);
+
         }
         else
         {
