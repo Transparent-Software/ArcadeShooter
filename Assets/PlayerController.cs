@@ -38,6 +38,7 @@ public class PlayerController : MonoBehaviour
     private int isLeftStrafeParamHash;
     private int isRightStrafeParamHash;
     private int isSprintingParamHash;
+    private int isJumpingParamHash;
 
     public void onSprint(InputAction.CallbackContext context)
     {
@@ -61,6 +62,7 @@ public class PlayerController : MonoBehaviour
     public void onJump(InputAction.CallbackContext context)
     {
         jump = context.ReadValue<float>();
+        Debug.Log(jump);
     }
 
     // Start is called before the first frame update
@@ -72,6 +74,7 @@ public class PlayerController : MonoBehaviour
         isWalkingBackParamHash = Animator.StringToHash("isWalkingBack");
         isLeftStrafeParamHash = Animator.StringToHash("isLeftStrafe");
         isRightStrafeParamHash = Animator.StringToHash("isRightStrafe");
+        isJumpingParamHash = Animator.StringToHash("isJumping");
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -89,11 +92,6 @@ public class PlayerController : MonoBehaviour
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
         onGround = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
-        if(onGround && jump > 0f)
-        {
-            playerRB.AddForce(new Vector3(playerRB.velocity.x, 1f, playerRB.velocity.z), ForceMode.Impulse);
-        }
 
 
         if (direction.magnitude >= 0.1f)
@@ -113,8 +111,7 @@ public class PlayerController : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
-            playerRB.AddForce(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
-
+            playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
 
             //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
         }
@@ -210,6 +207,15 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (onGround && jump > 0.8f)
+        {
+            playerRB.AddForce(new Vector3(playerRB.velocity.x / 2, 3f, playerRB.velocity.z / 2), ForceMode.Impulse);
+            animator.SetBool(isJumpingParamHash, true);
+        }
+        else
+        {
+            animator.SetBool(isJumpingParamHash, false);
+        }
     }
 
 }
