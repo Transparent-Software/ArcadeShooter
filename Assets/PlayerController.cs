@@ -110,7 +110,6 @@ public class PlayerController : MonoBehaviour
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
             }
 
-
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
             playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
@@ -185,7 +184,7 @@ public class PlayerController : MonoBehaviour
 
     private void handleAnimation()
     {
-        if (Input.GetKey("w"))
+        if (Input.GetKey("w") && onGround)
         {
             animator.SetBool(isWalkingParamHash, true);
             //playerRB.AddForce(new Vector3(0f, 0f, currentSpeed), ForceMode.VelocityChange);
@@ -196,7 +195,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isWalkingParamHash, false);
         }
 
-        if (Input.GetKey("s"))
+        if (Input.GetKey("s") && onGround)
         {
             animator.SetBool(isWalkingBackParamHash, true);
         }
@@ -205,7 +204,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isWalkingBackParamHash, false);
         }
 
-        if (Input.GetKey("a"))
+        if (Input.GetKey("a") && onGround)
         {
             animator.SetBool(isLeftStrafeParamHash, true);
         }
@@ -214,7 +213,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isLeftStrafeParamHash, false);
         }
 
-        if (Input.GetKey("d"))
+        if (Input.GetKey("d") && onGround)
         {
             animator.SetBool(isRightStrafeParamHash, true);
         }
@@ -226,13 +225,14 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (onGround && jump > 0.8f)
+        if (onGround && Input.GetKey(KeyCode.Space))
         {
-            playerRB.AddForce(new Vector3(playerRB.velocity.x / 2, 3f, playerRB.velocity.z / 2), ForceMode.Impulse);
+            playerRB.AddForce(new Vector3(playerRB.velocity.x, 10f, playerRB.velocity.z), ForceMode.Impulse);
             animator.SetBool(isJumpingParamHash, true);
         }
         else
         {
+            playerRB.velocity.Set(playerRB.velocity.x, -18.9f, playerRB.velocity.z);
             animator.SetBool(isJumpingParamHash, false);
         }
     }
