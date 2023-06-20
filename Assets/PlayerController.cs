@@ -122,6 +122,7 @@ public class PlayerController : MonoBehaviour
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
 
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            
 
         }
 
