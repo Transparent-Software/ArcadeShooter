@@ -41,6 +41,9 @@ public class PlayerController : MonoBehaviour
     private int isRightStrafeParamHash;
     private int isSprintingParamHash;
     private int isJumpingParamHash;
+    private int isAimingIdleParamHash;
+    private int isAimingRunningParamHash;
+    private int isAimingWalkingParamHash;
 
     public void onSprint(InputAction.CallbackContext context)
     {
@@ -77,6 +80,9 @@ public class PlayerController : MonoBehaviour
         isLeftStrafeParamHash = Animator.StringToHash("isLeftStrafe");
         isRightStrafeParamHash = Animator.StringToHash("isRightStrafe");
         isJumpingParamHash = Animator.StringToHash("isJumping");
+        isAimingIdleParamHash = Animator.StringToHash("isAimingIdle");
+        isAimingRunningParamHash = Animator.StringToHash("isAimingRunning");
+        isAimingWalkingParamHash = Animator.StringToHash("isAimingWalking");
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -220,6 +226,37 @@ public class PlayerController : MonoBehaviour
         else
         {
             animator.SetBool(isRightStrafeParamHash, false);
+        }
+
+
+        if (Input.GetMouseButton(1))
+        {
+            animator.SetBool(isAimingIdleParamHash, true);
+
+        }
+        else
+        {
+            animator.SetBool(isAimingIdleParamHash, false);
+        }
+
+        if (Input.GetMouseButton(1) && animator.GetBool(isSprintingParamHash))
+        {
+            animator.SetBool(isAimingRunningParamHash, true);
+
+        }
+        else
+        {
+            animator.SetBool(isAimingRunningParamHash, false);
+        }
+
+        if (Input.GetMouseButton(1) && animator.GetBool(isWalkingParamHash))
+        {
+            animator.SetBool(isAimingWalkingParamHash, true);
+
+        }
+        else
+        {
+            animator.SetBool(isAimingWalkingParamHash, false);
         }
     }
 

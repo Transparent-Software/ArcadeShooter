@@ -11,6 +11,7 @@ public class TrackBodyScript : MonoBehaviour
     void Start()
     {
         transform.position = tracking.position;
+        transform.rotation = tracking.rotation;
     }
 
     // Update is called once per frame
@@ -18,6 +19,9 @@ public class TrackBodyScript : MonoBehaviour
     {
         transform.position = tracking.position;
         transform.Translate(new Vector3(0f, 0f, 0.03f));
-        transform.rotation.Set(tracking.rotation.x + 90, tracking.rotation.z, tracking.rotation.y, 0f);
+
+        transform.rotation = tracking.rotation;
+        transform.Rotate(new Vector3(-90f, 0f, 90f));
+        
     }
 }
