@@ -5,7 +5,8 @@ using UnityEngine;
 public class GunInHandTracking : MonoBehaviour
 {
     public Transform tracking;
-    public Vector3 trackingDisplacement = new Vector3(0f, 0.03f, 0.3f);
+    public Vector3 trackingDisplacement = new Vector3(-0.02f, 0.03f, 0.29f);
+    public Vector3 rotationDisplacement = new Vector3(330.9f, 475.2f, 71.2f);
 
     // Start is called before the first frame update
     void Start()
@@ -21,7 +22,7 @@ public class GunInHandTracking : MonoBehaviour
         transform.Translate(trackingDisplacement);
 
         transform.rotation = tracking.rotation;
-        transform.Rotate(new Vector3(-75f, 0f, 90f));
+        transform.Rotate(rotationDisplacement, Space.Self);
 
     }
 }

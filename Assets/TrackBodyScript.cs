@@ -18,10 +18,10 @@ public class TrackBodyScript : MonoBehaviour
     void Update()
     {
         transform.position = tracking.position;
-        transform.Translate(new Vector3(0f, 0f, 0.03f));
+        transform.Translate(new Vector3(0.03f, 0f, -0.13f));
 
         transform.rotation = tracking.rotation;
-        transform.Rotate(new Vector3(-90f, 0f, 90f));
+        transform.Rotate(new Vector3(-10f, -90f, 90f), Space.Self);
         
     }
 }

@@ -24,13 +24,16 @@ public class PlayerController : MonoBehaviour
     bool onGround;
 
     //Character Movement Mechanics
-    //public CharacterController controller;
     public Rigidbody playerRB;
     public float currentSpeed = 200f;
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
     public Transform cam;
     public CinemachineVirtualCamera virtualCamera;
+
+    //Aim Pitch Mechanics
+    public GameObject spineRotation;
+    public Vector3 rot;
 
 
     //Animation Mechanics
@@ -94,44 +97,8 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
 
-        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
-
-        onGround = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
-
-        if (direction.magnitude >= 0.1f)
-        {
-
-            checkForSprint();
-
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-
-            if (Input.GetKey(KeyCode.W))
-            {
-                transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            }
-
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-
-            playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
-
-            //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
-        }
-        else
-        {
-            float targetAngle = cam.eulerAngles.y;
-
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            
-
-        }
+        //"HOLD BREATH" Mechanic. Gets virtual camera sway and sets it to 0 if left ctrl is pressed while aiming
 
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButton(1))
         {
@@ -144,14 +111,64 @@ public class PlayerController : MonoBehaviour
             virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 0.2f;
         }
 
-
-        if (Input.GetKeyDown(KeyCode.LeftAlt)){
-            
-        }
+        move();
 
         handleAnimation();
     }
 
+    private void move()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+        onGround = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        if (direction.magnitude >= 0.1f)
+        {
+
+            checkForSprint();
+
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float moveAngle = targetAngle;
+
+            if (Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.W))
+            {
+                targetAngle += 95f;
+            }
+
+            if (Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.W))
+            {
+                targetAngle -= 95f;
+            }
+
+            if (Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W))
+            {
+                targetAngle += 180f;
+            }
+
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            Vector3 moveDir = Quaternion.Euler(0f, moveAngle, 0f) * Vector3.forward;
+
+            playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
+
+            //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
+        }
+        else
+        {
+            float targetAngle = cam.eulerAngles.y;
+
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+
+        }
+    }
     private void checkForSprint()
     {
 
@@ -272,6 +289,39 @@ public class PlayerController : MonoBehaviour
             playerRB.velocity.Set(playerRB.velocity.x, -18.9f, playerRB.velocity.z);
             animator.SetBool(isJumpingParamHash, false);
         }
+    }
+
+    void LateUpdate()
+    {
+
+        Transform joint = spineRotation.transform.Find("PT_Spine2");
+        rot = new Vector3(rot.x, rot.y, cam.eulerAngles.x);
+
+        if (Input.GetMouseButton(1))
+        {
+            //rot = new Vector3(rot.x, rot.y+25f, cam.eulerAngles.x);
+            rot = new Vector3(rot.x, -cam.eulerAngles.x-0.05f, cam.eulerAngles.x);
+        }
+
+        joint.Rotate(rot, Space.Self);
+
+        Transform jointFold = spineRotation.transform.Find("PT_Spine2");
+
+        rot = new Vector3(rot.x, rot.y, rot.z - 100f);
+
+        if (Input.GetKey(KeyCode.LeftAlt))
+        {
+
+            jointFold.Rotate(rot, Space.Self);
+
+        }
+        else
+        {
+            rot = Vector3.zero;
+        }
+
+
+
     }
 
 }
