@@ -24,13 +24,16 @@ public class PlayerController : MonoBehaviour
     bool onGround;
 
     //Character Movement Mechanics
-    //public CharacterController controller;
     public Rigidbody playerRB;
     public float currentSpeed = 200f;
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
     public Transform cam;
     public CinemachineVirtualCamera virtualCamera;
+
+    //Aim Pitch Mechanics
+    public GameObject spineRotation;
+    public Vector3 rot;
 
 
     //Animation Mechanics
@@ -41,6 +44,9 @@ public class PlayerController : MonoBehaviour
     private int isRightStrafeParamHash;
     private int isSprintingParamHash;
     private int isJumpingParamHash;
+    private int isAimingIdleParamHash;
+    private int isAimingRunningParamHash;
+    private int isAimingWalkingParamHash;
 
     public void onSprint(InputAction.CallbackContext context)
     {
@@ -77,6 +83,9 @@ public class PlayerController : MonoBehaviour
         isLeftStrafeParamHash = Animator.StringToHash("isLeftStrafe");
         isRightStrafeParamHash = Animator.StringToHash("isRightStrafe");
         isJumpingParamHash = Animator.StringToHash("isJumping");
+        isAimingIdleParamHash = Animator.StringToHash("isAimingIdle");
+        isAimingRunningParamHash = Animator.StringToHash("isAimingRunning");
+        isAimingWalkingParamHash = Animator.StringToHash("isAimingWalking");
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -88,45 +97,8 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
 
-        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
-
-        onGround = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
-
-        if (direction.magnitude >= 0.1f)
-        {
-
-            checkForSprint();
-
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-
-            if (Input.GetKey(KeyCode.W))
-            {
-                transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            }
-
-
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-
-            playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
-
-            //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
-        }
-        else
-        {
-            float targetAngle = cam.eulerAngles.y;
-
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            
-
-        }
+        //"HOLD BREATH" Mechanic. Gets virtual camera sway and sets it to 0 if left ctrl is pressed while aiming
 
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetMouseButton(1))
         {
@@ -139,14 +111,64 @@ public class PlayerController : MonoBehaviour
             virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 0.2f;
         }
 
-
-        if (Input.GetKeyDown(KeyCode.LeftAlt)){
-            
-        }
+        move();
 
         handleAnimation();
     }
 
+    private void move()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+        onGround = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        if (direction.magnitude >= 0.1f)
+        {
+
+            checkForSprint();
+
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float moveAngle = targetAngle;
+
+            if (Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.W))
+            {
+                targetAngle += 95f;
+            }
+
+            if (Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.W))
+            {
+                targetAngle -= 95f;
+            }
+
+            if (Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W))
+            {
+                targetAngle += 180f;
+            }
+
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            Vector3 moveDir = Quaternion.Euler(0f, moveAngle, 0f) * Vector3.forward;
+
+            playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
+
+            //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
+        }
+        else
+        {
+            float targetAngle = cam.eulerAngles.y;
+
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+
+        }
+    }
     private void checkForSprint()
     {
 
@@ -185,7 +207,7 @@ public class PlayerController : MonoBehaviour
 
     private void handleAnimation()
     {
-        if (Input.GetKey("w"))
+        if (Input.GetKey("w") && onGround)
         {
             animator.SetBool(isWalkingParamHash, true);
             //playerRB.AddForce(new Vector3(0f, 0f, currentSpeed), ForceMode.VelocityChange);
@@ -196,7 +218,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isWalkingParamHash, false);
         }
 
-        if (Input.GetKey("s"))
+        if (Input.GetKey("s") && onGround)
         {
             animator.SetBool(isWalkingBackParamHash, true);
         }
@@ -205,7 +227,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isWalkingBackParamHash, false);
         }
 
-        if (Input.GetKey("a"))
+        if (Input.GetKey("a") && onGround)
         {
             animator.SetBool(isLeftStrafeParamHash, true);
         }
@@ -214,7 +236,7 @@ public class PlayerController : MonoBehaviour
             animator.SetBool(isLeftStrafeParamHash, false);
         }
 
-        if (Input.GetKey("d"))
+        if (Input.GetKey("d") && onGround)
         {
             animator.SetBool(isRightStrafeParamHash, true);
         }
@@ -222,19 +244,84 @@ public class PlayerController : MonoBehaviour
         {
             animator.SetBool(isRightStrafeParamHash, false);
         }
+
+
+        if (Input.GetMouseButton(1))
+        {
+            animator.SetBool(isAimingIdleParamHash, true);
+
+        }
+        else
+        {
+            animator.SetBool(isAimingIdleParamHash, false);
+        }
+
+        if (Input.GetMouseButton(1) && animator.GetBool(isSprintingParamHash))
+        {
+            animator.SetBool(isAimingRunningParamHash, true);
+
+        }
+        else
+        {
+            animator.SetBool(isAimingRunningParamHash, false);
+        }
+
+        if (Input.GetMouseButton(1) && animator.GetBool(isWalkingParamHash))
+        {
+            animator.SetBool(isAimingWalkingParamHash, true);
+
+        }
+        else
+        {
+            animator.SetBool(isAimingWalkingParamHash, false);
+        }
     }
 
     void FixedUpdate()
     {
-        if (onGround && jump > 0.8f)
+        if (onGround && Input.GetKey(KeyCode.Space))
         {
-            playerRB.AddForce(new Vector3(playerRB.velocity.x / 2, 3f, playerRB.velocity.z / 2), ForceMode.Impulse);
+            playerRB.AddForce(new Vector3(playerRB.velocity.x, 10f, playerRB.velocity.z), ForceMode.Impulse);
             animator.SetBool(isJumpingParamHash, true);
         }
         else
         {
+            playerRB.velocity.Set(playerRB.velocity.x, -18.9f, playerRB.velocity.z);
             animator.SetBool(isJumpingParamHash, false);
         }
+    }
+
+    void LateUpdate()
+    {
+
+        Transform joint = spineRotation.transform.Find("PT_Spine2");
+        rot = new Vector3(rot.x, rot.y, cam.eulerAngles.x);
+
+        if (Input.GetMouseButton(1))
+        {
+            //rot = new Vector3(rot.x, rot.y+25f, cam.eulerAngles.x);
+            rot = new Vector3(rot.x, -cam.eulerAngles.x-0.05f, cam.eulerAngles.x);
+        }
+
+        joint.Rotate(rot, Space.Self);
+
+        Transform jointFold = spineRotation.transform.Find("PT_Spine2");
+
+        rot = new Vector3(rot.x, rot.y, rot.z - 100f);
+
+        if (Input.GetKey(KeyCode.LeftAlt))
+        {
+
+            jointFold.Rotate(rot, Space.Self);
+
+        }
+        else
+        {
+            rot = Vector3.zero;
+        }
+
+
+
     }
 
 }
