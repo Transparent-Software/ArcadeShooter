@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.ProBuilder;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,10 +17,10 @@ public class PlayerController : MonoBehaviour
     private float sprintMove, jump;
 
     //Jump Mechanics
-    public float jumpHeight = 2.0f;
+    public float jumpHeight = 8.0f;
     public float gravity = -9.8f;
     public Transform groundCheck;
-    public float groundDistance = 0.4f;
+    public float groundDistance = 0.1f;
     public LayerMask groundMask;
     bool onGround;
 
@@ -47,6 +48,8 @@ public class PlayerController : MonoBehaviour
     private int isAimingIdleParamHash;
     private int isAimingRunningParamHash;
     private int isAimingWalkingParamHash;
+    private int isInAirParamHash;
+
 
     public void onSprint(InputAction.CallbackContext context)
     {
@@ -86,6 +89,7 @@ public class PlayerController : MonoBehaviour
         isAimingIdleParamHash = Animator.StringToHash("isAimingIdle");
         isAimingRunningParamHash = Animator.StringToHash("isAimingRunning");
         isAimingWalkingParamHash = Animator.StringToHash("isAimingWalking");
+        isInAirParamHash = Animator.StringToHash("isInAir");
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -110,8 +114,6 @@ public class PlayerController : MonoBehaviour
             virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0.2f;
             virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 0.2f;
         }
-
-        move();
 
         handleAnimation();
     }
@@ -153,10 +155,9 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, moveAngle, 0f) * Vector3.forward;
-
+           
             playerRB.AddForce(moveDir * currentSpeed * multiplier * Time.deltaTime, ForceMode.VelocityChange);
 
-            //controller.Move(moveDir.normalized * currentSpeed * multiplier * Time.deltaTime);
         }
         else
         {
@@ -167,6 +168,12 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
 
+        }
+
+        if(onGround && playerRB.velocity.y > 0f)
+        {
+            Debug.Log("On slope and onGround");
+            playerRB.AddForce(Vector3.down*1000f*Time.deltaTime, ForceMode.Acceleration);
         }
     }
     private void checkForSprint()
@@ -207,11 +214,18 @@ public class PlayerController : MonoBehaviour
 
     private void handleAnimation()
     {
+        if (!onGround)
+        {
+            animator.SetBool(isInAirParamHash, true);
+        }
+        else
+        {
+            animator.SetBool(isInAirParamHash, false);
+        }
+
         if (Input.GetKey("w") && onGround)
         {
             animator.SetBool(isWalkingParamHash, true);
-            //playerRB.AddForce(new Vector3(0f, 0f, currentSpeed), ForceMode.VelocityChange);
-
         }
         else
         {
@@ -246,27 +260,25 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButton(1) && onGround)
         {
             animator.SetBool(isAimingIdleParamHash, true);
-
         }
         else
         {
             animator.SetBool(isAimingIdleParamHash, false);
         }
 
-        if (Input.GetMouseButton(1) && animator.GetBool(isSprintingParamHash))
+        if (Input.GetMouseButton(1) && animator.GetBool(isSprintingParamHash) && onGround)
         {
             animator.SetBool(isAimingRunningParamHash, true);
-
         }
         else
         {
             animator.SetBool(isAimingRunningParamHash, false);
         }
 
-        if (Input.GetMouseButton(1) && animator.GetBool(isWalkingParamHash))
+        if (Input.GetMouseButton(1) && animator.GetBool(isWalkingParamHash) && onGround)
         {
             animator.SetBool(isAimingWalkingParamHash, true);
 
@@ -279,14 +291,17 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        move();
+
         if (onGround && Input.GetKey(KeyCode.Space))
         {
-            playerRB.AddForce(new Vector3(playerRB.velocity.x, 10f, playerRB.velocity.z), ForceMode.Impulse);
+            playerRB.velocity = new Vector3(playerRB.velocity.x, jumpHeight, playerRB.velocity.z);
             animator.SetBool(isJumpingParamHash, true);
+            animator.SetBool(isInAirParamHash, true);
+
         }
         else
         {
-            playerRB.velocity.Set(playerRB.velocity.x, -18.9f, playerRB.velocity.z);
             animator.SetBool(isJumpingParamHash, false);
         }
     }
