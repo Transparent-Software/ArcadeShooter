@@ -23,6 +23,8 @@ public class PlayerController : MonoBehaviour
     public float groundDistance = 0.1f;
     public LayerMask groundMask;
     bool onGround;
+    private float _jumpTime = 0f;
+    private float _jumpCoolDown = 2f;
 
     //Character Movement Mechanics
     public Rigidbody playerRB;
@@ -73,7 +75,6 @@ public class PlayerController : MonoBehaviour
     public void onJump(InputAction.CallbackContext context)
     {
         jump = context.ReadValue<float>();
-        Debug.Log(jump);
     }
 
     // Start is called before the first frame update
@@ -93,8 +94,6 @@ public class PlayerController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-
 
     }
 
@@ -172,7 +171,6 @@ public class PlayerController : MonoBehaviour
 
         if(onGround && playerRB.velocity.y > 0f)
         {
-            Debug.Log("On slope and onGround");
             playerRB.AddForce(Vector3.down*1000f*Time.deltaTime, ForceMode.Acceleration);
         }
     }
@@ -293,16 +291,24 @@ public class PlayerController : MonoBehaviour
     {
         move();
 
-        if (onGround && Input.GetKey(KeyCode.Space))
+        if (onGround && Input.GetKeyDown(KeyCode.Space) && _jumpTime <= 0f)
         {
             playerRB.velocity = new Vector3(playerRB.velocity.x, jumpHeight, playerRB.velocity.z);
             animator.SetBool(isJumpingParamHash, true);
             animator.SetBool(isInAirParamHash, true);
-
         }
         else
         {
+            if(animator.GetBool(isJumpingParamHash))
+            {
+                _jumpTime = _jumpCoolDown;
+            }
             animator.SetBool(isJumpingParamHash, false);
+        }
+
+        if(_jumpTime > 0f)
+        {
+            _jumpTime -= Time.deltaTime * 8f;
         }
     }
 
@@ -312,10 +318,15 @@ public class PlayerController : MonoBehaviour
         Transform joint = spineRotation.transform.Find("PT_Spine2");
         rot = new Vector3(rot.x, rot.y, cam.eulerAngles.x);
 
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButton(1) && Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.W))
         {
             //rot = new Vector3(rot.x, rot.y+25f, cam.eulerAngles.x);
-            rot = new Vector3(rot.x, -cam.eulerAngles.x-0.05f, cam.eulerAngles.x);
+            rot = new Vector3(310f, rot.y, cam.eulerAngles.x);
+        }
+        else if (Input.GetMouseButton(1) && Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.W))
+        {
+            //rot = new Vector3(rot.x, rot.y+25f, cam.eulerAngles.x);
+            rot = new Vector3(50f, rot.y, cam.eulerAngles.x);
         }
 
         joint.Rotate(rot, Space.Self);
