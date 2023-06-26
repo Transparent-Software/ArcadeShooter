@@ -1,6 +1,7 @@
 using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.ProBuilder;
@@ -34,8 +35,9 @@ public class PlayerController : MonoBehaviour
     public Transform cam;
     public CinemachineVirtualCamera virtualCamera;
 
-    //Aim Pitch Mechanics
+    //Aim Mechanics
     public GameObject spineRotation;
+    public GameObject stillRightArm;
     public Vector3 rot;
 
 
@@ -346,7 +348,19 @@ public class PlayerController : MonoBehaviour
             rot = Vector3.zero;
         }
 
+        Transform armJoint = stillRightArm.transform.Find("pistol Variant(Clone)");
+        Vector3 gunRotation = Vector3.zero;
 
+        if (Input.GetMouseButton(1))
+        {
+            gunRotation = new Vector3(cam.eulerAngles.x, cam.eulerAngles.y+1f, 0f);
+        }
+
+
+        if (Input.GetMouseButton(1))
+        {
+            armJoint.rotation = Quaternion.Euler(gunRotation);
+        }
 
     }
 

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 825dbfcd34722f34ebc1db4556f67629, type: 3}
+  m_Name: Pistol
+  m_EditorClassIdentifier: 
+  Type: 0
+  Name: Pistol
+  ModelPrefab: {fileID: 4183724654677648084, guid: 36db1a3e308530c4093db5f95ad2368b,
+    type: 3}
+  SpawnPoint: {x: 0, y: 0, z: -0.01}
+  SpawnRotation: {x: 178, y: -90, z: 0}
+  ShootConfig: {fileID: 11400000, guid: 2a37ee1b1830f16419ca967eeef77526, type: 2}
+  TrailConfig: {fileID: 11400000, guid: d62f65a4bf6e54942a75288508bd2806, type: 2}
